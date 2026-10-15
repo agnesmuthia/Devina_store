@@ -1,7 +1,14 @@
-# Daviena Store — Phase 1: Repository Audit & Architecture Plan
+# Devina Store — Phase 1: Repository Audit & Architecture Plan
 
-Status: **Proposal, waiting for owner approval.** No application code has been written yet.
+Status: **Approved by the owner on 2026-10-15** (decisions below). Phase 2 is in progress.
 Date: 2026-10-15
+
+## Owner decisions (2026-10-15)
+1. Stack approved: Next.js + TypeScript + Tailwind + Supabase + Vercel.
+2. Payments: **Midtrans Snap** as the primary method. **Virtual account first**, **QRIS enabled after GoPay activation**. The static-QRIS manual fallback was not requested, so it is **not planned** unless the owner asks for it later.
+3. Shipping: **Biteship** (rates, pickup booking, tracking webhooks). Biteship replaces RajaOngkir as the first provider in section 7.
+4. Checkout **requires a customer account**.
+5. Store name: **Devina Store**. Products: beauty — ice face roller, nose strips, nose shaper (pemancung hidung), nose clip (penjepit hidung), and makeup.
 
 > The customer-facing site and the admin will be in Bahasa Indonesia, and the full README will be written in Bahasa Indonesia from Phase 2 on. This planning document is in English to match the brief.
 
@@ -20,7 +27,7 @@ Date: 2026-10-15
 
 **Conclusion:** this is a **new project**. Nothing needs preserving or migrating, so the default stack from the brief applies.
 
-**Naming note:** the repository is called `Devina_store` but the brief says **Daviena Store**. I'll use "Daviena Store" as the default store name. It is editable from admin settings, so a later spelling change needs no code change.
+**Naming:** the owner confirmed **Devina Store** (matching the repository name). The name stays editable from admin settings.
 
 ### 1.1 Reusable components and features
 
@@ -75,7 +82,7 @@ Indonesian, SEO-friendly URLs.
 | `/akun/wishlist` | Wishlist |
 | `/akun/ulasan` | Reviews written and items eligible for review |
 | `/faq`, `/kontak` | FAQ and contact |
-| `/kebijakan/pengiriman`, `/kebijakan/pembatalan`, `/kebijakan/pengembalian`, `/kebijakan/privasi`, `/syarat-ketentuan` | Policy pages (content edited in admin) |
+| `/kebijakan/pengiriman`, `/kebijakan/pembatalan`, `/kebijakan/pengembalian`, `/kebijakan/privasi`, `/kebijakan/syarat-ketentuan` | Policy pages (content edited in admin) |
 | `/sitemap.xml`, `/robots.txt` | SEO |
 
 ### Admin (`/admin`, `noindex`, admin-only, server-verified)
@@ -217,7 +224,7 @@ A `ShippingProvider` interface: `searchDestinations()`, `getRates(origin, destin
 | Pricing | *Starter* tier on signup (free, with daily request limits) and a paid *Pro* subscription. **I could not confirm the current quotas or prices.** Check the Komerce dashboard. | Marketed "from Rp5 per API request". Verify on their pricing page. |
 | Best fit | You drop parcels at courier counters yourself and type the waybill into admin. | You want booking and pickup from the dashboard and automatic tracking updates. |
 
-**Recommendation:** start with **Komerce RajaOngkir** for rates and waybill tracking (lowest fixed cost for a solo seller). Biteship stays a drop-in alternative behind the same interface. Other details:
+**Decision (owner, 2026-10-15): Biteship** for rates, pickup booking, and tracking webhooks. RajaOngkir stays a possible alternative behind the same interface. Other details:
 - Weight is computed **on the server** from variant weights × quantities (with a configurable packaging allowance, rounded up per the provider's rules).
 - If the provider fails, the customer sees "Ongkir tidak dapat dihitung, coba lagi". No quote is ever made up.
 - Manual flat rates exist only if enabled in admin and are labeled "Tarif manual" on checkout and the order.
@@ -233,7 +240,7 @@ A `ShippingProvider` interface: `searchDestinations()`, `getRates(origin, destin
 | 1 | **Supabase** | A project (region: Singapore). `Project URL`, publishable/anon key, **service role key (secret)**. | Phase 3 |
 | 2 | **Midtrans Sandbox** | Sandbox *Merchant ID*, *Client Key*, **Server Key (secret)**. Available now from the dashboard's environment switch. | Phase 7 |
 | 3 | **Midtrans Production** | GoPay e-money activation → check QRIS availability. Production keys. Set the *Payment Notification URL* to `https://<domain>/api/payments/midtrans/notification` and the Finish/Unfinish/Error redirect URLs. | Before launch |
-| 4 | **Shipping** | Komerce RajaOngkir API key (or Biteship API key). Your **origin address** (province, city, district, postal code). | Phase 6 |
+| 4 | **Shipping (Biteship)** | Biteship account + API key (test and live). Your **origin address** (province, city, district, postal code) and pickup contact. | Phase 6 |
 | 5 | **Vercel** | Account linked to GitHub. **Pro plan for commercial use.** | Phase 10 (preview deploys can start earlier) |
 | 6 | **Domain** | Registrar account plus DNS access. | Phase 10 |
 | 7 | **Email (SMTP)** | A transactional email provider (e.g. Resend or Brevo) with a verified sending domain, for password resets and order emails. Supabase's built-in email is rate-limited and meant for testing only. | Phase 3 (test) / Phase 10 (production) |
@@ -274,9 +281,9 @@ Each phase ends with: files changed, what works, tests run, open issues, externa
 | **3** | Supabase schema migrations + RLS, auth (register, login, password reset), profile, address book, admin allowlist | Auth and RLS privacy tests pass against a local Supabase |
 | **4** | Real catalog from the DB, admin product editor (images, variants, promos, SEO, duplicate, archive, CSV), categories, inventory grid, settings and homepage editor | Owner can create and publish a product with no code; tests pass |
 | **5** | Cart (guest + account merge), wishlist, coupons, checkout, server-side pricing, transactional stock reservation | Price-tampering and concurrent-order tests pass |
-| **6** | Shipping provider adapter (RajaOngkir), destination search, live rates, manual fallback, order creation with shipping | Mocked success and failure tests pass; live test with your sandbox/Starter key |
-| **7** | Payment abstraction, Midtrans Snap sandbox, webhook verification, idempotency, expiry and reconciliation crons, demo mode, integration status, optional static QRIS manual flow | Sandbox payment completes end to end; duplicate and forged webhook tests pass |
-| **8** | Admin order management, state transitions, shipments and waybill, tracking sync, customer timeline, email notifications | Tracking update tests pass |
+| **6** | Shipping provider adapter (Biteship), destination search, live rates, manual fallback, order creation with shipping | Mocked success and failure tests pass; live test with your sandbox/Starter key |
+| **7** | Payment abstraction, Midtrans Snap sandbox, webhook verification, idempotency, expiry and reconciliation crons, demo mode, integration status | Sandbox payment completes end to end; duplicate and forged webhook tests pass |
+| **8** | Admin order management, state transitions, Biteship shipment booking and waybill, tracking webhooks, customer timeline, email notifications | Tracking update tests pass |
 | **9** | Reviews (verified purchase, moderation, replies, photos), SEO (metadata, sitemap, robots, JSON-LD, slug redirects, breadcrumbs), policy pages | Structured data validates; review rule tests pass |
 | **10** | Security review, rate limiting, full test pass (17 workflows incl. mobile E2E), production checklist, deployment, domain, Search Console, backup docs | Feature checklist completed honestly |
 
@@ -286,7 +293,7 @@ Current state: **everything ⬜**.
 
 ---
 
-## 11. Decisions needed from you before Phase 2
+## 11. Decisions needed from you before Phase 2 (answered — see "Owner decisions" at the top)
 
 1. **Stack:** approve Next.js + TypeScript + Tailwind + Supabase + Vercel?
 2. **Payments:** approve **Snap (dynamic) as primary**, with **VA enabled first** and **QRIS turned on after GoPay activation**? Should the **static-QRIS manual-verification** fallback be built (disabled by default), or skipped?

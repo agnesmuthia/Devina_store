@@ -22,3 +22,9 @@ supabase/.temp/
 *.log
 .vscode/*
 !.vscode/extensions.json
+
+# Next.js / TypeScript generated
+next-env.d.ts
+*.tsbuildinfo
+.vercel
+*.pem
