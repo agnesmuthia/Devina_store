@@ -1,0 +1,24 @@
+# Secrets — never commit real credentials
+.env
+.env*.local
+.env.production
+!.env.example
+
+# Dependencies & builds
+node_modules/
+.next/
+out/
+dist/
+coverage/
+playwright-report/
+test-results/
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/
+
+# OS / editor
+.DS_Store
+*.log
+.vscode/*
+!.vscode/extensions.json
